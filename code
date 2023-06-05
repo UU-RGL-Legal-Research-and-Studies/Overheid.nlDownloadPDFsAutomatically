@@ -1,0 +1,52 @@
+import requests
+from bs4 import BeautifulSoup
+import os
+from urllib.parse import urlparse
+
+# Base URL of the website containing the PDF links
+base_url = "https://zoek.officielebekendmakingen.nl/resultaten?svel=Publicatiedatum&svol=Aflopend&pg=50&q=(c.product-area==%22officielepublicaties%22)and(cql.textAndIndexes=%22beleidsregel%22)&zv=beleidsregel&col=&pagina="
+#Change with your own keyword
+
+# Number of pages to download
+num_pages = 5  # Update this to the desired number of pages
+
+for page_number in range(1, 1 + num_pages):
+    # Construct the URL for the current page
+    url = f"{base_url}{page_number}"
+
+    # Send a GET request to the website
+    response = requests.get(url)
+
+    # Create a BeautifulSoup object to parse the HTML content
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    # Find all the anchor tags that point to PDF files
+    pdf_links = soup.find_all("a", href=True)
+
+    # Iterate over each PDF link and download the file
+    for link in pdf_links:
+        pdf_url = link["href"]
+
+        # Check if the URL starts with "http://" or "https://"
+        if not pdf_url.startswith("http"):
+            # Prepend the scheme to the URL
+            parsed_url = urlparse(url)
+            pdf_url = f"{parsed_url.scheme}://{parsed_url.netloc}/{pdf_url}"
+
+        # Check if the URL ends with ".pdf" extension
+        if pdf_url.endswith(".pdf"):
+            # Send a GET request to the PDF URL
+            pdf_response = requests.get(pdf_url)
+
+            # Extract the filename from the URL
+            filename = os.path.basename(pdf_url)
+
+            # Save the PDF file
+            with open(filename, "wb") as f:
+                f.write(pdf_response.content)
+
+            print(f"Downloaded {filename}")
+
+    # Print a separator between pages
+    print("-" * 40)
+
