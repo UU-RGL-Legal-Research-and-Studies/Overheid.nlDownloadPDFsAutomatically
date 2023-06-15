@@ -1,0 +1,53 @@
+library(rvest)
+library(httr)
+library(stringr)
+
+# Base URL of the website containing the PDF links
+base_url <- "https://zoek.officielebekendmakingen.nl/resultaten?svel=Publicatiedatum&svol=Aflopend&pg=50&q=(c.product-area==%22officielepublicaties%22)and(dt.available%3E=%222015-01-01%22%20and%20dt.available%3C=%222021-01-01%22)and(dt.type==%22ondercuratelestelling%20of%20handlichting%22)and((w.publicatienaam==%22Staatscourant%22))and(cql.textAndIndexes=%22handlichting%22)&zv=handlichting&col=Staatscourant&pagina="
+# Change with your own keyword
+
+# Number of pages to download
+num_pages <- 255  # Update this to the desired number of pages
+
+for (page_number in 1:num_pages) {
+  # Construct the URL for the current page
+  url <- paste0(base_url, page_number)
+  
+  # Send a GET request to the website
+  response <- httr::GET(url)
+  
+  # Create an HTML document from the response content
+  soup <- rvest::read_html(httr::content(response, "text"))
+  
+  # Find all the anchor tags that point to PDF files
+  pdf_links <- rvest::html_nodes(soup, "a[href]")
+  
+  # Iterate over each PDF link and download the file
+  for (link in pdf_links) {
+    pdf_url <- rvest::html_attr(link, "href")
+    
+    # Check if the URL ends with ".pdf" extension
+    if (str_ends(pdf_url, ".pdf")) {
+      tryCatch({
+        # Prepend the URL prefix
+        pdf_url <- paste0("https://zoek.officielebekendmakingen.nl/noindex/", pdf_url)
+        
+        # Send a GET request to the PDF URL
+        pdf_response <- httr::GET(pdf_url)
+        
+        # Extract the filename from the URL
+        filename <- basename(pdf_url)
+        
+        # Save the PDF file
+        writeBin(httr::content(pdf_response), filename)
+        
+        cat("Downloaded", filename, "\n")
+      }, error = function(e) {
+        cat("Error downloading", pdf_url, "Skipping...\n")
+      })
+    }
+  }
+  
+  # Print a separator between pages
+  cat(strrep("-", 40), "\n")
+}
