@@ -1,9 +1,9 @@
 # Overheid.nlDownloadPDFsAutomatically
 Automatically Download All PDFs from "Officiële Bekendmakingen (Overheid.nl)"
 
-The provided code is a Python script that is used to download PDF files from a website called Overheid.nl. The script has been written with the help of ChatGPT (3.5). 
+The provided code is a Python script that is used to download PDF files from a website called Overheid.nl. The script has been written with the help of ChatGPT (3.5). We also have the script available in R.
 
-Here is an overview of how the code works:
+Here is an overview of how the code works in Python:
 
 1. The script starts by importing the necessary libraries: `requests`, `BeautifulSoup`, `os`, and `urlparse`.
 
